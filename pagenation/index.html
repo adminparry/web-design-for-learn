@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+    .pagination ul {
+        list-style: none;
+        padding-left: 0
+    }
+
+    .pagination ul li {
+        padding: 0 10px;
+        vertical-align: top;
+        display: inline-block;
+        font-size: 14px;
+        min-width: 36px;
+        min-height: 28px;
+        line-height: 28px;
+        cursor: pointer;
+        box-sizing: border-box;
+        text-align: center;
+        background-color: #fff;
+        color: #606266;
+        border-radius: 6px;
+        margin: 0 1px;
+        border: 1px solid #ebebeb;
+        height: 30px
+    }
+
+    .pagination ul li:hover {
+        transform: scale(1.1);
+        background-color: #f4f6f8
+    }
+
+    .pagination li.active {
+        background: #98a6ad;
+        color: #fff;
+        cursor: not-allowed
+    }
+
+    .pagination li.disabled {
+        cursor: not-allowed
+    }
+
+    .pagination li.totalPage {
+        background: 0 0;
+        cursor: default;
+        border: 0;
+        padding: 0 6px
+    }
+
+    .pagination li.totalPage:hover {
+        transform: none;
+        background-color: #fff
+    }
+
+    .pagination li input {
+        -webkit-appearance: none;
+        background-color: #fff;
+        background-image: none;
+        border-radius: 4px;
+        border: 1px solid #dcdfe6;
+        box-sizing: border-box;
+        color: #606266;
+        display: inline-block;
+        font-size: inherit;
+        outline: 0;
+        padding: 3px 5px;
+        transition: border-color .2s cubic-bezier(.645, .045, .355, 1);
+        width: 40px;
+        height: 25px;
+        margin: 0 6px
+    }
+
+    .pagination li input:focus {
+        border-color: #98a6ad
+    }
+
+    .pagination {
+        user-select: none
+    }
+
+    .pagination ul:nth-child(2) {
+        border-radius: 6px
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0
+    }
+    </style>
+</head>
+
+<body>
+    <div>
+        <table id="table" border="1">
+            <thead>
+            	<tr>
+            		<td>年龄</td>
+            		<td>姓名</td>
+            		<td>爱好</td>
+            	</tr>
+            </thead>
+        </table>
+        <div id="pagination" class="pagination">
+            <ul>
+                <li>首页</li>
+                <li>&lt;</li>
+                <li>46</li>
+                <li>47</li>
+                <li class="active">48</li>
+                <li>49</li>
+                <li>50</li>
+                <li>&gt;</li>
+                <li>尾页</li>
+                <li class="totalPage"><span>跳转到</span>
+                    <input type="number"><span>页</span></li>
+                <li class="totalPage">共&nbsp;50&nbsp;页</li>
+                <li class="totalPage">每页&nbsp;10&nbsp;条</li>
+                <li class="totalPage">合计&nbsp;500&nbsp;条数据</li>
+            </ul>
+        </div>
+    </div>
+</body>
+<script>
+function Pagenation(json) {
+	this.ul = document.createElement('ul');
+	this.el = json.el;
+	// 显示页码数量
+	this.showCount = json.showCount;
+
+	this.currentPage = json.currentPage;
+	this.pageSize = json.pageSize;
+	this.pageTotal = json.pageTotal;
+	this.callback = json.callback;
+
+	this.init();
+}
+Pagenation.prototype.init = function() {
+	var self = this;
+	this.ul.innerHTML = null;
+	this.el.innerHTML = null;
+
+
+	this.el.appendChild(this.ul);
+	var page = this.getPages();
+	this.prev();
+	page.forEach(function(item, index){
+		var li = document.createElement('li');
+
+		if(item == self.currentPage){
+			li.className = "active";
+		}else{
+			li.onclick = function(){
+				self.currentPage = this.innerText - 0;
+				self.init();
+				self.callback(self);
+			}
+		}
+		li.innerText = item;
+		self.ul.appendChild(li);
+	})
+	this.next();
+}
+Pagenation.prototype.prev = function(){
+	var self = this;
+	var li = document.createElement('li');
+		li.innerText = "<";
+		if(this.currentPage > 1){
+
+			li.onclick = function(){
+				self.currentPage -= 1;
+				self.init();
+				self.callback(self);
+			}
+		}else{
+			li.className = 'disabled';
+		}
+	this.ul.appendChild(li);
+}
+Pagenation.prototype.next = function(){
+	var self = this;
+	var li = document.createElement('li');
+		li.innerText = ">";
+		if(this.currentPage < this.pageTotal){
+
+			li.onclick = function(){
+				self.currentPage += 1;
+				self.init();
+				self.callback(self);
+			}
+		}else{
+			li.className = 'disabled';
+		}
+	this.ul.appendChild(li);
+}
+Pagenation.prototype.getPages = function(){
+	var pageList = [];
+
+	if(this.currentPage <= this.pageTotal){
+		var start;
+		if(this.showCount >= this.pageTotal){
+			start = 1;
+			for (var i = start; i <= this.pageTotal ; i++) {
+				pageList.push(i);
+			};
+		}else if(this.currentPage < this.showCount ){
+			start = 1;
+			for (var i = start; i <= this.showCount ; i++) {
+				pageList.push(i);
+			};
+		}else if(this.currentPage > this.pageTotal - this.showCount){
+
+			start = this.pageTotal - this.showCount;
+			for (var i = start; i <= this.pageTotal ; i++) {
+				pageList.push(i);
+			};
+		}else{
+			for (var i = 0,j = Math.floor(this.showCount / 2); i < this.showCount; i++,j--) {
+				pageList.unshift(this.currentPage + j);
+
+			};
+		}
+	
+
+	}else{
+		console.error("当前页数不能大于总页数")
+	}
+
+	return pageList;
+}
+
+
+
+function getTableData(){
+	var self = this;
+	this.el = document.querySelector("#table");
+	this.thead = document.createElement('thead');
+	this.tbody = document.createElement("tbody");
+	
+
+	// this.el.appendChild(this.thead);
+	this.el.appendChild(this.tbody);
+	// this.el.appendChild(this.tr);
+
+	this.pageXhr({currentPage:1,pageSize:3}).then(function(res){
+		self.insertData(res.data);
+		new Pagenation({
+			el:document.querySelector("#pagination"),
+			currentPage:1,
+			showCount:2,
+			pageSize:3,
+			pageTotal:res.pageTotal,
+			callback:function(context){
+				self.pageXhr(context).then(function(res){
+					self.insertData(res.data);
+				});
+				
+			}
+		})
+	});
+	
+}
+getTableData.prototype.insertData = function(arr){
+	this.thead.innerHTML = null;
+	this.tbody.innerHTML = null;
+	this.tr = null;
+
+	var self = this;
+
+	arr.forEach(function(item,index){
+		var tr = document.createElement("tr");
+
+		Object.keys(item).forEach(function(item1){
+			var td = document.createElement('td');
+			td.innerText = item[item1];
+			tr.appendChild(td);
+		});
+
+		
+		self.tbody.appendChild(tr);
+	})
+}
+
+getTableData.prototype.pageXhr = function(context){
+	return new Promise(function(resolve, reject){
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET","/pagenation?pageNo="+context.currentPage +"&pageSize=" + context.pageSize,true);
+		xhr.send();
+		xhr.responseType = 'json';
+		xhr.onreadystatechange = function() {
+
+	      if (xhr.readyState == 4 && xhr.status == 200 || xhr.status == 304) { 
+	      	resolve(xhr.response)
+	        // fn.call(this, xhr.responseText);  
+
+	      }
+	    };	
+	})
+	
+}
+new getTableData();
+</script>
+
+</html>
